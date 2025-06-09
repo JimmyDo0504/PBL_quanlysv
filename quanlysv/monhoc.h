@@ -16,6 +16,7 @@ public:
     wchar_t hoTen[30];
     float lab1, lab2, pt1, pt2, presentation, final, trung_binh;
     char diemchu;
+    float gpa;
 
 
 
@@ -23,18 +24,33 @@ public:
         trung_binh = (lab1 + lab2 + pt1 + pt2 + presentation + final) / 6;
         tinhdiemchu();
     }
-
     void tinhdiemchu() {
-        if (trung_binh >= 9)
+        diemchu = 'F'; // Mặc định là F
+        if (trung_binh >= 9) {
             diemchu = 'A';
-        else if (trung_binh >= 8)
+            gpa = 4.0;
+        }
+        else if (trung_binh >= 8) {
             diemchu = 'B';
-        else if (trung_binh >= 7)
+            gpa = 3.5;
+        }
+        else if (trung_binh >= 7) {
             diemchu = 'C';
-        else if (trung_binh >= 6)
+            gpa = 3.0;
+        }
+        else if (trung_binh >= 6) {
             diemchu = 'D';
-        else
-            diemchu = 'F';
+            gpa = 2.5;
+        }
+        else if (trung_binh >= 5) {
+            gpa = 2.0;
+        }
+        else if (trung_binh >= 4) {
+            gpa = 1.0;
+        }
+        else {
+            gpa = 0.0;
+        }
     }
 };
 
