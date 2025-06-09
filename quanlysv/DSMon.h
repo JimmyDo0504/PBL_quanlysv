@@ -35,12 +35,12 @@ namespace quanlysv {
 			isSubmitted = false;
 			txtMSSV->Text = gcnew String(sv.mssv);
 			txtHoTen->Text = gcnew String(sv.hoTen);
-			txtLab1->Text = sv.lab1.ToString();
-			txtLab2->Text = sv.lab2.ToString();
-			txtPt1->Text = sv.pt1.ToString();
-			txtPt2->Text = sv.pt2.ToString();
-			txtPresentation->Text = sv.presentation.ToString();
-			txtFinal->Text = sv.final.ToString();
+			txtLab1->Text = (sv.lab1 == -1.0f) ? "" : sv.lab1.ToString();
+			txtLab2->Text = (sv.lab2 == -1.0f) ? "" : sv.lab2.ToString();
+			txtPt1->Text = (sv.pt1 == -1.0f) ? "" : sv.pt1.ToString();
+			txtPt2->Text = (sv.pt2 == -1.0f) ? "" : sv.pt2.ToString();
+			txtPresentation->Text = (sv.presentation == -1.0f) ? "" : sv.presentation.ToString();
+			txtFinal->Text = (sv.final == -1.0f) ? "" : sv.final.ToString();
 		}
 
 	private:
@@ -184,13 +184,34 @@ namespace quanlysv {
 		void btnOK_Click(Object^ sender, EventArgs^ e) {
 			MSSV = txtMSSV->Text;
 			HoTen = txtHoTen->Text;
+			// Check required fields
+			if (String::IsNullOrWhiteSpace(MSSV) || String::IsNullOrWhiteSpace(HoTen)) {
+				MessageBox::Show(L"MSSV và Họ tên là các trường bắt buộc!", L"Lỗi", MessageBoxButtons::OK, MessageBoxIcon::Error);
+				return;
+			}
+			// Validate MSSV - must contain only digits
+			for each (wchar_t c in MSSV) {
+				if (!Char::IsDigit(c)) {
+					MessageBox::Show(L"MSSV chỉ được chứa các chữ số!", L"Lỗi", MessageBoxButtons::OK, MessageBoxIcon::Error);
+					return;
+				}
+			}
+
+			// Validate HoTen - must contain only letters and spaces
+			for each (wchar_t c in HoTen) {
+				if (!Char::IsLetter(c) && !Char::IsWhiteSpace(c)) {
+					MessageBox::Show(L"Họ tên chỉ được chứa chữ cái và khoảng trắng!", L"Lỗi", MessageBoxButtons::OK, MessageBoxIcon::Error);
+					return;
+				}
+			}
+
 			try {
-				Lab1 = System::Single::Parse(txtLab1->Text);
-				Lab2 = System::Single::Parse(txtLab2->Text);
-				Pt1 = System::Single::Parse(txtPt1->Text);
-				Pt2 = System::Single::Parse(txtPt2->Text);
-				Presentation = System::Single::Parse(txtPresentation->Text);
-				Final = System::Single::Parse(txtFinal->Text);
+				Lab1 = String::IsNullOrWhiteSpace(txtLab1->Text) ? -1.0f : System::Single::Parse(txtLab1->Text);
+				Lab2 = String::IsNullOrWhiteSpace(txtLab2->Text) ? -1.0f : System::Single::Parse(txtLab2->Text);
+				Pt1 = String::IsNullOrWhiteSpace(txtPt1->Text) ? -1.0f : System::Single::Parse(txtPt1->Text);
+				Pt2 = String::IsNullOrWhiteSpace(txtPt2->Text) ? -1.0f : System::Single::Parse(txtPt2->Text);
+				Presentation = String::IsNullOrWhiteSpace(txtPresentation->Text) ? -1.0f : System::Single::Parse(txtPresentation->Text);
+				Final = String::IsNullOrWhiteSpace(txtFinal->Text) ? -1.0f : System::Single::Parse(txtFinal->Text);
 			}
 			catch (Exception^) {
 				MessageBox::Show(L"Giá trị điểm không hợp lệ.", L"Lỗi", MessageBoxButtons::OK, MessageBoxIcon::Error);
@@ -292,7 +313,8 @@ namespace quanlysv {
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ final;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ diemtb;
 	private: System::Windows::Forms::DataGridViewTextBoxColumn^ DiemChu;
-	private: System::Windows::Forms::TextBox^ textmonhoc;
+	private: System::Windows::Forms::DataGridViewTextBoxColumn^ GPA;
+			private: System::Windows::Forms::TextBox^ textmonhoc;
 
 
 	private:
@@ -321,6 +343,7 @@ namespace quanlysv {
 			this->final = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->diemtb = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->DiemChu = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
+			this->GPA = (gcnew System::Windows::Forms::DataGridViewTextBoxColumn());
 			this->panelcover2 = (gcnew System::Windows::Forms::Panel());
 			this->textmonhoc = (gcnew System::Windows::Forms::TextBox());
 			this->Mon = (gcnew System::Windows::Forms::Label());
@@ -364,9 +387,9 @@ namespace quanlysv {
 			this->dataMon->AutoSizeColumnsMode = System::Windows::Forms::DataGridViewAutoSizeColumnsMode::Fill;
 			this->dataMon->BackgroundColor = System::Drawing::Color::White;
 			this->dataMon->ColumnHeadersHeightSizeMode = System::Windows::Forms::DataGridViewColumnHeadersHeightSizeMode::AutoSize;
-			this->dataMon->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(10) {
+			this->dataMon->Columns->AddRange(gcnew cli::array< System::Windows::Forms::DataGridViewColumn^  >(11) {
 				this->MaSv, this->TenSV,
-					this->lab1, this->lab2, this->bt1, this->bt2, this->presentation, this->final, this->diemtb, this->DiemChu
+					this->lab1, this->lab2, this->bt1, this->bt2, this->presentation, this->final, this->diemtb, this->DiemChu, this->GPA
 			});
 			this->dataMon->Dock = System::Windows::Forms::DockStyle::Fill;
 			this->dataMon->Location = System::Drawing::Point(0, 0);
@@ -435,6 +458,12 @@ namespace quanlysv {
 			this->DiemChu->HeaderText = L"Điểm chữ";
 			this->DiemChu->MinimumWidth = 6;
 			this->DiemChu->Name = L"DiemChu";
+			// 
+			// GPA
+			// 
+			this->GPA->HeaderText = L"GPA (hệ 4)";
+			this->GPA->MinimumWidth = 6;
+			this->GPA->Name = L"GPA";
 			// 
 			// panelcover2
 			// 
@@ -596,26 +625,33 @@ namespace quanlysv {
 			dataMon->Rows->Clear();
 			for (int i = 0; i < nativeMonHoc->n; i++) {
 				SinhVien sv = nativeMonHoc->sv[i];
-				int rowIndex=dataMon->Rows->Add(
+				bool allScoresEmpty = (sv.lab1 == -1.0f || sv.lab2 == -1.0f ||
+					sv.pt1 == -1.0f || sv.pt2 == -1.0f ||
+					sv.presentation == -1.0f || sv.final == -1.0f);
+
+				int rowIndex = dataMon->Rows->Add(
 					gcnew String(sv.mssv),
 					gcnew String(sv.hoTen),
-					sv.lab1,
-					sv.lab2,
-					sv.pt1,
-					sv.pt2,
-					sv.presentation,
-					sv.final,
-					sv.trung_binh,
-					gcnew String(sv.diemchu, 1)
-
+					(sv.lab1 == -1.0f) ? "" : sv.lab1.ToString(),
+					(sv.lab2 == -1.0f) ? "" : sv.lab2.ToString(),
+					(sv.pt1 == -1.0f) ? "" : sv.pt1.ToString(),
+					(sv.pt2 == -1.0f) ? "" : sv.pt2.ToString(),
+					(sv.presentation == -1.0f) ? "" : sv.presentation.ToString(),
+					(sv.final == -1.0f) ? "" : sv.final.ToString(),
+					allScoresEmpty ? "" : sv.trung_binh.ToString("F1"),
+					allScoresEmpty ? "" : gcnew String(sv.diemchu, 1),
+					allScoresEmpty ? "" : sv.gpa.ToString("F1")
 				);
+				
 				DataGridViewRow^ row = dataMon->Rows[rowIndex];
 				// Đặt màu nền cho hàng dựa trên điểm trung bình
-				if (sv.trung_binh < 4.0f) {
-					row->DefaultCellStyle->BackColor = System::Drawing::Color::LightCoral; // Màu đỏ nhạt cho điểm dưới 5
-				}
-				else if (sv.trung_binh > 8.0f) {
-					row->DefaultCellStyle->BackColor = System::Drawing::Color::LightGreen; // Màu vàng nhạt cho điểm từ 5 đến dưới 7
+				if (!allScoresEmpty) {
+					if (sv.trung_binh < 4.0f) {
+						row->DefaultCellStyle->BackColor = System::Drawing::Color::LightCoral; // Màu đỏ nhạt cho điểm dưới 5
+					}
+					else if (sv.trung_binh > 8.0f) {
+						row->DefaultCellStyle->BackColor = System::Drawing::Color::LightGreen; // Màu xanh nhạt cho điểm từ 8 trở lên
+					}
 				}
 			}
 		}
@@ -642,6 +678,14 @@ private: System::Void update_Click(System::Object^ sender, System::EventArgs^ e)
 		SinhVien newSV;
 		msclr::interop::marshal_context context;
 		std::string newMssv = context.marshal_as<std::string>(editForm->MSSV);
+		// Check if MSSV has changed and if new MSSV already exists
+		if (strcmp(currentSV.mssv, newMssv.c_str()) != 0) {
+			int existingIndex = nativeMonHoc->timSV(newMssv.c_str());
+			if (existingIndex != -1) {
+				MessageBox::Show(L"Mã số sinh viên đã tồn tại trong danh sách!", L"Lỗi", MessageBoxButtons::OK, MessageBoxIcon::Error);
+				return;
+			}
+		}
 		std::wstring newHoTen = context.marshal_as<std::wstring>(editForm->HoTen);
 		strcpy(newSV.mssv, newMssv.c_str());
 		wcscpy(newSV.hoTen, newHoTen.c_str());
@@ -682,8 +726,9 @@ private: System::Void Them_Click(System::Object^ sender, System::EventArgs^ e) {
 	SinhVien blankSV;
 	strcpy(blankSV.mssv, "");
 	wcscpy(blankSV.hoTen, L"");
-	blankSV.lab1 = blankSV.lab2 = blankSV.pt1 = blankSV.pt2 = blankSV.presentation = blankSV.final = 0.0f;
+	blankSV.lab1 = blankSV.lab2 = blankSV.pt1 = blankSV.pt2 = blankSV.presentation = blankSV.final = -1.0f;
 	blankSV.trung_binh = 0;
+	blankSV.gpa = 0;
 	blankSV.diemchu = 'F';
 	// Mở EditForm với đối tượng rỗng
 	EditForm^ editForm = gcnew EditForm(blankSV);
@@ -694,6 +739,13 @@ private: System::Void Them_Click(System::Object^ sender, System::EventArgs^ e) {
 		msclr::interop::marshal_context context;
 		std::string newMssv = context.marshal_as<std::string>(editForm->MSSV);
 		std::wstring newHoTen = context.marshal_as<std::wstring>(editForm->HoTen);
+
+		// Check if MSSV already exists in database
+		if (nativeMonHoc->timSV(newMssv.c_str()) != -1) {
+			MessageBox::Show(L"Mã số sinh viên đã tồn tại trong danh sách!", L"Lỗi", MessageBoxButtons::OK, MessageBoxIcon::Error);
+			return;
+		}
+
 		strcpy(newSV.mssv, newMssv.c_str());
 		wcscpy(newSV.hoTen, newHoTen.c_str());
 		newSV.lab1 = editForm->Lab1;
@@ -741,7 +793,8 @@ private: System::Void xuatfileexcel_Click(System::Object^ sender, System::EventA
 			"Presentation",
 			"Final",
 			L"Điểm trung bình",
-			L"Điểm chữ"
+			L"Điểm chữ",
+			L"GPA (hệ 4)"  // Add GPA header
 		};
 		sw->WriteLine(String::Join(",", headers));
 
